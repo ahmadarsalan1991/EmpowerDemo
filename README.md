@@ -16,6 +16,7 @@ Before you begin, ensure you have met the following requirements:
 - Azure Blob Storage account.
 - Azure SQL Database.
 - Azure Data Factory.
+- Azure AI Search.
 - Visual Studio or any C# IDE.
 
 ## Setup
@@ -247,6 +248,28 @@ Before you begin, ensure you have met the following requirements:
 
 ## Configuration
 1. **All the configuration save in appsettings.json**
+    ```bash
+    {
+        "AzureSQLConnectionString": "***",
+
+        "BlobStorageSettings": {
+            "StorageAccount": "***",
+            "StorageKey": "***",
+            "ContainerName": "***"
+        },
+
+        "AzureSettings": {
+            "SubscriptionId": "***",
+            "ResourceGroupName": "***",
+            "DataFactoryName": "***",
+            "SearchServiceEndPoint": "https://***",
+            "SearchServiceAdminApiKey": "***",
+            "Location": "***",
+            "TenantId": "***",
+            "ApplicationClientId": "***",
+            "ApplicationClientSecret": "***"
+        }
+    }
 
 ## Running the Project
     cd EmpowerDemoApp

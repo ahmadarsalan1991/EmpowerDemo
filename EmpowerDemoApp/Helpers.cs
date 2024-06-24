@@ -1,10 +1,36 @@
-﻿using System.Text.Json.Serialization;
-using Azure.Search.Documents.Indexes;
+﻿using Azure.Search.Documents.Indexes;
 using Bogus;
 using Newtonsoft.Json;
 
 namespace EmpowerDemoApp
 {
+    public static class Constent
+    {
+        public const string Categories_Staging_Table = "dbo.Categories_Staging";
+        public const string Products_Staging_Table = "dbo.Products_Staging";
+        public const string Orders_Staging_Table = "dbo.Orders_Staging";
+        public const string Order_Products_Staging_Table = "dbo.Order_Products_Staging";
+
+        public const string Categories_Table = "dbo.Categories";
+        public const string Products_Table = "dbo.Products";
+        public const string Orders_Table = "dbo.Orders";
+        public const string Order_Products_Table = "dbo.Order_Products";
+
+        public const string Categories_Json = "categories.json";
+        public const string Products_Json = "products.json";
+        public const string Orders_Json = "orders.json";
+        public const string Order_Products_Json = "orderproducts.json";
+
+        public const string StorageLinkedServiceName = "StorageLinkedServiceName";
+        public const string SqlDbLinkedServiceName = "SqlDbLinkedServiceName";
+        public const string BlobDatasetName = "BlobDatasetName";
+        public const string SqlDatasetName = "SqlDatasetName";
+        public const string CategoryPipelineName = "CategoryPipelineName";
+        public const string ProductPipelineName = "ProductPipelineName";
+        public const string OrderPipelineName = "OrderPipelineName";
+        public const string OrderProductPipelineName = "OrderProductPipelineName";
+    }
+
     public static class DummyDataHelper
     {
         public static List<Category> GenerateRandomCategories(int numberOfCategories)

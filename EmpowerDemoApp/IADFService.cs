@@ -20,7 +20,6 @@ namespace EmpowerDemoApp
         private readonly IConfiguration _configuration;
         private readonly AzureSettings _azureSettings;
         private readonly BlobStorageSettings _blobStorageSettings;
-        private readonly SqlTableSettings _sqlTableSettings;
         private readonly ILogger<ADFService> _logger;
         private readonly IDBService _dBService;
         private readonly ISearchService _searchService;
@@ -31,7 +30,6 @@ namespace EmpowerDemoApp
             IConfiguration configuration,
             AzureSettings azureSettings,
             BlobStorageSettings blobStorageSettings,
-            SqlTableSettings sqlTableSettings,
             IDBService dBService,
             ISearchService searchService,
             ILogger<ADFService> logger)
@@ -39,7 +37,6 @@ namespace EmpowerDemoApp
             _logger = logger;
             _configuration = configuration;
             _azureSettings = azureSettings;
-            _sqlTableSettings = sqlTableSettings;
             _blobStorageSettings = blobStorageSettings;
             _dBService = dBService;
             _searchService = searchService;
@@ -72,7 +69,7 @@ namespace EmpowerDemoApp
         private async Task<string> GetTokenCredentialsAsync()
         {
             var context = new AuthenticationContext($"https://login.microsoftonline.com/{_azureSettings.TenantId}");
-            var clientCredential = new ClientCredential(_azureSettings.ClientId, _azureSettings.ClientSecret);
+            var clientCredential = new ClientCredential(_azureSettings.ApplicationClientId, _azureSettings.ApplicationClientSecret);
             var result = await context.AcquireTokenAsync("https://management.azure.com/", clientCredential);
             return result.AccessToken;
         }
@@ -108,7 +105,7 @@ namespace EmpowerDemoApp
                 }
             );
 
-            await client.LinkedServices.CreateOrUpdateAsync(_azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.StorageLinkedServiceName, linkedServiceResource);
+            await client.LinkedServices.CreateOrUpdateAsync(_azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.StorageLinkedServiceName, linkedServiceResource);
             Console.WriteLine(
                     SafeJsonConvert.SerializeObject(linkedServiceResource, client.SerializationSettings)
                 );
@@ -123,7 +120,7 @@ namespace EmpowerDemoApp
                 }
             );
             await client.LinkedServices.CreateOrUpdateAsync(
-                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.SqlDbLinkedServiceName, sqlDbLinkedService
+                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.SqlDbLinkedServiceName, sqlDbLinkedService
             );
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(sqlDbLinkedService, client.SerializationSettings)
@@ -154,10 +151,10 @@ namespace EmpowerDemoApp
                 {
                     LinkedServiceName = new LinkedServiceReference
                     {
-                        ReferenceName = _azureSettings.StorageLinkedServiceName
+                        ReferenceName = Constent.StorageLinkedServiceName
                     },
                     FolderPath = _blobStorageSettings.ContainerName,
-                    FileName = _blobStorageSettings.CategoryJson,
+                    FileName = Constent.Categories_Json,
                     Format = new JsonFormat
                     {
                         FilePattern = "arrayOfObjects"
@@ -169,7 +166,7 @@ namespace EmpowerDemoApp
                 }
             );
             await client.Datasets.CreateOrUpdateAsync(
-                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.BlobDatasetName, blobDataset
+                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.BlobDatasetName, blobDataset
             );
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(blobDataset, client.SerializationSettings)
@@ -181,14 +178,14 @@ namespace EmpowerDemoApp
                 {
                     LinkedServiceName = new LinkedServiceReference
                     {
-                        ReferenceName = _azureSettings.SqlDbLinkedServiceName
+                        ReferenceName = Constent.SqlDbLinkedServiceName
                     },
-                    TableName = _sqlTableSettings.CategoryTable
+                    TableName = Constent.Categories_Staging_Table
                 }
             );
 
             await client.Datasets.CreateOrUpdateAsync(
-                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.SqlDatasetName, sqlDataset
+                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.SqlDatasetName, sqlDataset
             );
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(sqlDataset, client.SerializationSettings)
@@ -204,11 +201,11 @@ namespace EmpowerDemoApp
                         Name = "CopyFromBlobToSQL",
                         Inputs = new List<DatasetReference>
                         {
-                            new DatasetReference() { ReferenceName = _azureSettings.BlobDatasetName }
+                            new DatasetReference() { ReferenceName = Constent.BlobDatasetName }
                         },
                         Outputs = new List<DatasetReference>
                         {
-                            new DatasetReference { ReferenceName = _azureSettings.SqlDatasetName }
+                            new DatasetReference { ReferenceName = Constent.SqlDatasetName }
                         },
                         Source = new BlobSource { },
                         Sink = new SqlSink { }
@@ -216,12 +213,12 @@ namespace EmpowerDemoApp
                 }
             };
 
-            await client.Pipelines.CreateOrUpdateAsync(_azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.CategoryPipelineName, pipeline);
+            await client.Pipelines.CreateOrUpdateAsync(_azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.CategoryPipelineName, pipeline);
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(pipeline, client.SerializationSettings)
             );
 
-            await TriggerPipelineAsync(client, _azureSettings.CategoryPipelineName);
+            await TriggerPipelineAsync(client, Constent.CategoryPipelineName);
         }
 
         private async Task ProductPipeline()
@@ -232,10 +229,10 @@ namespace EmpowerDemoApp
                 {
                     LinkedServiceName = new LinkedServiceReference
                     {
-                        ReferenceName = _azureSettings.StorageLinkedServiceName
+                        ReferenceName = Constent.StorageLinkedServiceName
                     },
                     FolderPath = _blobStorageSettings.ContainerName,
-                    FileName = _blobStorageSettings.ProductJson,
+                    FileName = Constent.Products_Json,
                     Format = new JsonFormat
                     {
                         FilePattern = "arrayOfObjects"
@@ -252,7 +249,7 @@ namespace EmpowerDemoApp
                 }
             );
             await client.Datasets.CreateOrUpdateAsync(
-                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.BlobDatasetName, blobDataset
+                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.BlobDatasetName, blobDataset
             );
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(blobDataset, client.SerializationSettings)
@@ -264,14 +261,14 @@ namespace EmpowerDemoApp
                 {
                     LinkedServiceName = new LinkedServiceReference
                     {
-                        ReferenceName = _azureSettings.SqlDbLinkedServiceName
+                        ReferenceName = Constent.SqlDbLinkedServiceName
                     },
-                    TableName = _sqlTableSettings.ProductTable
+                    TableName = Constent.Products_Staging_Table
                 }
             );
 
             await client.Datasets.CreateOrUpdateAsync(
-                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.SqlDatasetName, sqlDataset
+                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.SqlDatasetName, sqlDataset
             );
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(sqlDataset, client.SerializationSettings)
@@ -287,11 +284,11 @@ namespace EmpowerDemoApp
                         Name = "CopyFromBlobToSQL",
                         Inputs = new List<DatasetReference>
                         {
-                            new DatasetReference() { ReferenceName = _azureSettings.BlobDatasetName }
+                            new DatasetReference() { ReferenceName = Constent.BlobDatasetName }
                         },
                         Outputs = new List<DatasetReference>
                         {
-                            new DatasetReference { ReferenceName = _azureSettings.SqlDatasetName }
+                            new DatasetReference { ReferenceName = Constent.SqlDatasetName }
                         },
                         Source = new BlobSource { },
                         Sink = new SqlSink { }
@@ -299,12 +296,12 @@ namespace EmpowerDemoApp
                 }
             };
 
-            await client.Pipelines.CreateOrUpdateAsync(_azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.ProductPipelineName, pipeline);
+            await client.Pipelines.CreateOrUpdateAsync(_azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.ProductPipelineName, pipeline);
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(pipeline, client.SerializationSettings)
             );
 
-            await TriggerPipelineAsync(client, _azureSettings.ProductPipelineName);
+            await TriggerPipelineAsync(client, Constent.ProductPipelineName);
         }
 
         private async Task OrderPipeline()
@@ -315,10 +312,10 @@ namespace EmpowerDemoApp
                 {
                     LinkedServiceName = new LinkedServiceReference
                     {
-                        ReferenceName = _azureSettings.StorageLinkedServiceName
+                        ReferenceName = Constent.StorageLinkedServiceName
                     },
                     FolderPath = _blobStorageSettings.ContainerName,
-                    FileName = _blobStorageSettings.OrderJson,
+                    FileName = Constent.Orders_Json,
                     Format = new JsonFormat
                     {
                         FilePattern = "arrayOfObjects"
@@ -331,7 +328,7 @@ namespace EmpowerDemoApp
                 }
             );
             await client.Datasets.CreateOrUpdateAsync(
-                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.BlobDatasetName, blobDataset
+                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.BlobDatasetName, blobDataset
             );
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(blobDataset, client.SerializationSettings)
@@ -343,14 +340,14 @@ namespace EmpowerDemoApp
                 {
                     LinkedServiceName = new LinkedServiceReference
                     {
-                        ReferenceName = _azureSettings.SqlDbLinkedServiceName
+                        ReferenceName = Constent.SqlDbLinkedServiceName
                     },
-                    TableName = _sqlTableSettings.OrderTable
+                    TableName = Constent.Orders_Staging_Table
                 }
             );
 
             await client.Datasets.CreateOrUpdateAsync(
-                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.SqlDatasetName, sqlDataset
+                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.SqlDatasetName, sqlDataset
             );
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(sqlDataset, client.SerializationSettings)
@@ -366,11 +363,11 @@ namespace EmpowerDemoApp
                         Name = "CopyFromBlobToSQL",
                         Inputs = new List<DatasetReference>
                         {
-                            new DatasetReference() { ReferenceName = _azureSettings.BlobDatasetName }
+                            new DatasetReference() { ReferenceName = Constent.BlobDatasetName }
                         },
                         Outputs = new List<DatasetReference>
                         {
-                            new DatasetReference { ReferenceName = _azureSettings.SqlDatasetName }
+                            new DatasetReference { ReferenceName = Constent.SqlDatasetName }
                         },
                         Source = new BlobSource { },
                         Sink = new SqlSink { }
@@ -378,12 +375,12 @@ namespace EmpowerDemoApp
                 }
             };
 
-            await client.Pipelines.CreateOrUpdateAsync(_azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.OrderPipelineName, pipeline);
+            await client.Pipelines.CreateOrUpdateAsync(_azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.OrderPipelineName, pipeline);
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(pipeline, client.SerializationSettings)
             );
 
-            await TriggerPipelineAsync(client, _azureSettings.OrderPipelineName);
+            await TriggerPipelineAsync(client, Constent.OrderPipelineName);
         }
 
         private async Task OrderProductPipeline()
@@ -394,10 +391,10 @@ namespace EmpowerDemoApp
                 {
                     LinkedServiceName = new LinkedServiceReference
                     {
-                        ReferenceName = _azureSettings.StorageLinkedServiceName
+                        ReferenceName = Constent.StorageLinkedServiceName
                     },
                     FolderPath = _blobStorageSettings.ContainerName,
-                    FileName = _blobStorageSettings.ProductOrderJson,
+                    FileName = Constent.Order_Products_Json,
                     Format = new JsonFormat
                     {
                         FilePattern = "arrayOfObjects"
@@ -411,7 +408,7 @@ namespace EmpowerDemoApp
                 }
             );
             await client.Datasets.CreateOrUpdateAsync(
-                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.BlobDatasetName, blobDataset
+                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.BlobDatasetName, blobDataset
             );
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(blobDataset, client.SerializationSettings)
@@ -423,14 +420,14 @@ namespace EmpowerDemoApp
                 {
                     LinkedServiceName = new LinkedServiceReference
                     {
-                        ReferenceName = _azureSettings.SqlDbLinkedServiceName
+                        ReferenceName = Constent.SqlDbLinkedServiceName
                     },
-                    TableName = _sqlTableSettings.ProductOrderTable
+                    TableName = Constent.Order_Products_Staging_Table
                 }
             );
 
             await client.Datasets.CreateOrUpdateAsync(
-                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.SqlDatasetName, sqlDataset
+                _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.SqlDatasetName, sqlDataset
             );
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(sqlDataset, client.SerializationSettings)
@@ -446,11 +443,11 @@ namespace EmpowerDemoApp
                         Name = "CopyFromBlobToSQL",
                         Inputs = new List<DatasetReference>
                         {
-                            new DatasetReference() { ReferenceName = _azureSettings.BlobDatasetName }
+                            new DatasetReference() { ReferenceName = Constent.BlobDatasetName }
                         },
                         Outputs = new List<DatasetReference>
                         {
-                            new DatasetReference { ReferenceName = _azureSettings.SqlDatasetName }
+                            new DatasetReference { ReferenceName = Constent.SqlDatasetName }
                         },
                         Source = new BlobSource { },
                         Sink = new SqlSink { }
@@ -458,12 +455,12 @@ namespace EmpowerDemoApp
                 }
             };
 
-            await client.Pipelines.CreateOrUpdateAsync(_azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, _azureSettings.OrderProductPipelineName, pipeline);
+            await client.Pipelines.CreateOrUpdateAsync(_azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, Constent.OrderProductPipelineName, pipeline);
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(pipeline, client.SerializationSettings)
             );
 
-            await TriggerPipelineAsync(client, _azureSettings.OrderProductPipelineName);
+            await TriggerPipelineAsync(client, Constent.OrderProductPipelineName);
         }
 
         private async Task TriggerPipelineAsync(DataFactoryManagementClient client, string pipelineName)
@@ -500,19 +497,19 @@ namespace EmpowerDemoApp
                 if (pipelineRun.Status == "Succeeded")
                 {
                     Console.WriteLine(queryResponse.Value.First().Output);
-                    if (pipelineName.Equals(_azureSettings.ProductPipelineName))
+                    if (pipelineName.Equals(Constent.ProductPipelineName))
                     {
                         await _dBService.SyncProductsAsync();
                     }
-                    else if (pipelineName.Equals(_azureSettings.CategoryPipelineName))
+                    else if (pipelineName.Equals(Constent.CategoryPipelineName))
                     {
                         await _dBService.SyncCategoriesAsync();
                     }
-                    else if (pipelineName.Equals(_azureSettings.OrderPipelineName))
+                    else if (pipelineName.Equals(Constent.OrderPipelineName))
                     {
                         await _dBService.SyncOrdersAsync();
                     }
-                    else if (pipelineName.Equals(_azureSettings.OrderProductPipelineName))
+                    else if (pipelineName.Equals(Constent.OrderProductPipelineName))
                     {
                         await _dBService.SyncOrderProductsAsync();
                     }

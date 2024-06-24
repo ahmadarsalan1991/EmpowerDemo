@@ -20,7 +20,6 @@ namespace EmpowerDemoApp
         private readonly ILogger<SearchService> _logger;
         private readonly IConfiguration _configuration;
         private readonly AzureSettings _azureSettings;
-        private readonly SqlTableSettings _sqlTableSettings;
 
         private string indexerName = "product-sql-idxr";
         private string indexName = "product-sql-idx";
@@ -28,13 +27,11 @@ namespace EmpowerDemoApp
         public SearchService(
             ILogger<SearchService> logger,
             IConfiguration configuration,
-            AzureSettings azureSettings,
-            SqlTableSettings sqlTableSettings)
+            AzureSettings azureSettings)
         {
             _logger = logger;
             _configuration = configuration;
             _azureSettings = azureSettings;
-            _sqlTableSettings = sqlTableSettings;
         }
 
         public async Task CreateProductSearchAsync()
@@ -160,7 +157,7 @@ namespace EmpowerDemoApp
              "product-sql-ds",
              SearchIndexerDataSourceType.AzureSql,
              _configuration.GetValue<string>("AzureSQLConnectionString"),
-             new SearchIndexerDataContainer("dbo.Products"));
+             new SearchIndexerDataContainer(Constent.Products_Table));
 
             indexerClient.CreateOrUpdateDataSourceConnection(dataSource);
 

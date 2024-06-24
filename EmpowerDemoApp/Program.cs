@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using static System.Net.Mime.MediaTypeNames;
 
 IConfigurationBuilder builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
 IConfigurationRoot configuration = builder.Build();
@@ -24,14 +23,11 @@ IHost _host = Host.CreateDefaultBuilder()
         services.Configure<BlobStorageSettings>(configuration.GetSection("BlobStorageSettings"));
         services.AddSingleton(sp => sp.GetRequiredService<IOptions<BlobStorageSettings>>().Value);
 
-        services.Configure<SqlTableSettings>(configuration.GetSection("SqlTableSettings"));
-        services.AddSingleton(sp => sp.GetRequiredService<IOptions<SqlTableSettings>>().Value);
     }).Build();
 
 //DI Resolved
 IStorageService storageService = _host.Services.GetRequiredService<IStorageService>();
 BlobStorageSettings blobStorageSettings = _host.Services.GetRequiredService<BlobStorageSettings>();
-SqlTableSettings sqlTableSettings = _host.Services.GetRequiredService<SqlTableSettings>();
 IADFService aDFService = _host.Services.GetRequiredService<IADFService>();
 IDBService dBService = _host.Services.GetRequiredService<IDBService>();
 ISearchService searchService = _host.Services.GetRequiredService<ISearchService>();
@@ -96,10 +92,10 @@ if (userOptionInput == 1)
     List<OrderProduct> orderProducts = DummyDataHelper.GenerateRandomOrderProducts(numberOfOrderProduct, orders, products);
 
 
-    await storageService.SaveJsonToBlob(Newtonsoft.Json.JsonConvert.SerializeObject(categories), blobStorageSettings.CategoryJson);
-    await storageService.SaveJsonToBlob(Newtonsoft.Json.JsonConvert.SerializeObject(products), blobStorageSettings.ProductJson);
-    await storageService.SaveJsonToBlob(Newtonsoft.Json.JsonConvert.SerializeObject(orders), blobStorageSettings.OrderJson);
-    await storageService.SaveJsonToBlob(Newtonsoft.Json.JsonConvert.SerializeObject(orderProducts), blobStorageSettings.ProductOrderJson);
+    await storageService.SaveJsonToBlob(Newtonsoft.Json.JsonConvert.SerializeObject(categories), Constent.Categories_Json);
+    await storageService.SaveJsonToBlob(Newtonsoft.Json.JsonConvert.SerializeObject(products), Constent.Products_Json);
+    await storageService.SaveJsonToBlob(Newtonsoft.Json.JsonConvert.SerializeObject(orders), Constent.Orders_Json);
+    await storageService.SaveJsonToBlob(Newtonsoft.Json.JsonConvert.SerializeObject(orderProducts), Constent.Order_Products_Json);
     await aDFService.CreateADFPipline();
 
     Console.WriteLine("Press any key to go back to main menu");
