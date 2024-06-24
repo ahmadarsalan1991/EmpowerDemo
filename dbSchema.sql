@@ -119,36 +119,6 @@ CREATE TABLE OrderProductsChangeLog (
 );
 GO
 
--- Enable Change Tracking on the database
-ALTER DATABASE EmpowerDemoDB
-SET CHANGE_TRACKING = ON
-(CHANGE_RETENTION = 2 DAYS, AUTO_CLEANUP = ON);
-GO
-
--- Enable Change Tracking on the Categories table
-ALTER TABLE dbo.Categories
-ENABLE CHANGE_TRACKING
-WITH (TRACK_COLUMNS_UPDATED = ON);
-GO
-
--- Enable Change Tracking on the Products table
-ALTER TABLE dbo.Products
-ENABLE CHANGE_TRACKING
-WITH (TRACK_COLUMNS_UPDATED = ON);
-GO
-
--- Enable Change Tracking on the Orders table
-ALTER TABLE dbo.Orders
-ENABLE CHANGE_TRACKING
-WITH (TRACK_COLUMNS_UPDATED = ON);
-GO
-
--- Enable Change Tracking on the Order_Products table
-ALTER TABLE dbo.Order_Products
-ENABLE CHANGE_TRACKING
-WITH (TRACK_COLUMNS_UPDATED = ON);
-GO
-
 -- Create trigger to log changes in the Categories table
 CREATE TRIGGER trgCategoryAfterInsertUpdateDelete
 ON dbo.Categories

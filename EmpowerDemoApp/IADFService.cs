@@ -1,4 +1,5 @@
-﻿using EmpowerDemoApp.Models;
+﻿using System.Text;
+using EmpowerDemoApp.Models;
 using Microsoft.Azure.Management.DataFactory;
 using Microsoft.Azure.Management.DataFactory.Models;
 using Microsoft.Extensions.Configuration;
@@ -57,6 +58,9 @@ namespace EmpowerDemoApp
             await CreateDataFactory();
             await CreateStorageLinkedService();
             await CreateSqlLinkedService();
+
+            await DeleteOldQueuedPipeline(client);
+
             await CategoryPipeline();
             await ProductPipeline();
             await OrderPipeline();
@@ -124,6 +128,22 @@ namespace EmpowerDemoApp
             Console.WriteLine(
                 SafeJsonConvert.SerializeObject(sqlDbLinkedService, client.SerializationSettings)
             );
+        }
+
+        private async Task DeleteOldQueuedPipeline(DataFactoryManagementClient client)
+        {
+            var runs = await client.PipelineRuns.QueryByFactoryAsync(_azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, new RunFilterParameters());
+            if (runs?.Value != null)
+            {
+                foreach (var run in runs.Value)
+                {
+                    if (run.Status == "Queued")
+                    {
+                        Console.WriteLine($"Cancelled run with ID: {run.RunId}");
+                        await client.PipelineRuns.CancelAsync(_azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, run.RunId);
+                    }
+                }
+            }
         }
 
         private async Task CategoryPipeline()
@@ -457,7 +477,7 @@ namespace EmpowerDemoApp
             PipelineRun pipelineRun;
             while (true)
             {
-                pipelineRun = client.PipelineRuns.Get(
+                pipelineRun = await client.PipelineRuns.GetAsync(
                     _azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, runResponse.Body.RunId
                 );
                 Console.WriteLine($"Status {pipelineName} pipeline: {pipelineRun.Status}");
@@ -497,9 +517,22 @@ namespace EmpowerDemoApp
                         await _dBService.SyncOrderProductsAsync();
                     }
                 }
+                else if (pipelineRun.Status == "Queued")
+                {
+                    await client.PipelineRuns.CancelAsync(_azureSettings.ResourceGroupName, _azureSettings.DataFactoryName, runResponse.Body.RunId);
+                    Console.WriteLine($"Cancelled run with ID: {runResponse.Body.RunId}");
+                    await TriggerPipelineAsync(client, pipelineName);
+                }
                 else
                 {
-                    _logger.LogError($"{queryResponse?.Value?.First()?.Error}");
+                    if (queryResponse?.Value?.First()?.Error != null)
+                    {
+                        _logger.LogError($"{queryResponse?.Value?.First()?.Error}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Status {pipelineName} pipeline: {pipelineRun.Status}");
+                    }
                 }
             }
             catch (Exception ex)
